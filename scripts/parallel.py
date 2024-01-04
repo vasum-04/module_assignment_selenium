@@ -11,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from threading import Thread
+import time
 
 load_dotenv()
 BROWSERSTACK_USERNAME = os.environ.get(
@@ -23,7 +24,7 @@ capabilities = [
     {
         "os": "OS X",
         "osVersion": "Monterey",
-        "buildName": "browserstack-build-1",
+        "buildName": "module_assignment_selenium",
         "sessionName": "BStack parallel python",
         "browserName": "chrome",
         "browserVersion": "latest"
@@ -31,7 +32,7 @@ capabilities = [
     {
         "os": "Windows",
         "osVersion": "11",
-        "buildName": "browserstack-build-1",
+        "buildName": "module_assignment_selenium",
         "sessionName": "BStack parallel python",
         "browserName": "firefox",
         "browserVersion": "latest"
@@ -39,7 +40,7 @@ capabilities = [
     {
         "osVersion": "10",
         "deviceName": "Samsung Galaxy S20",
-        "buildName": "browserstack-build-1",
+        "buildName": "module_assignment_selenium",
         "sessionName": "BStack parallel python",
         "browserName": "chrome",
     },
@@ -83,6 +84,36 @@ def run_session(cap):
     try:
         driver.get("https://bstackdemo.com/")
         WebDriverWait(driver, 10).until(EC.title_contains("StackDemo"))
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, "signin")))
+        driver.find_element(By.ID, "signin").click()
+        driver.implicitly_wait(5)
+
+        # Click the username dropdown
+        
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "username"))
+        ).click()
+
+        # Select the 'demouser' option
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@id='username']//div[contains(text(), 'demouser')]"))
+        ).click()
+        time.sleep(2)
+        # Click the password dropdown
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "password"))
+        ).click()
+
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@id='password']//div[contains(text(), 'testingisfun99')]"))
+        ).click()
+        time.sleep(2)
+        # Click the login button
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "login-btn"))
+        ).click()
+        driver.implicitly_wait(10)
+        
         # Get text of an product - iPhone 12
         item_on_page = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.XPATH, '//*[@id="1"]/p'))).text
@@ -100,6 +131,35 @@ def run_session(cap):
             # Set the status of test as 'passed' or 'failed' based on the condition; if item is added to cart
             driver.execute_script(
                 'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"passed", "reason": "iPhone 12 has been successfully added to the cart!"}}')
+
+        # Click the 'Proceed to Checkout' button
+        checkout_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, 'buy-btn')))
+        checkout_button.click()
+
+        # Fill in shipping address details
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "firstNameInput"))).send_keys("Vasudev")
+        driver.find_element(By.ID, "lastNameInput").send_keys("Mishra")
+        driver.find_element(By.ID, "addressLine1Input").send_keys("128/303 K Block Kidwai Nagar Kanpur")
+        driver.find_element(By.ID, "provinceInput").send_keys("UttarPradesh")
+        driver.find_element(By.ID, "postCodeInput").send_keys("208011")
+
+        # Click the 'Submit' button for the shipping address
+        submit_button = driver.find_element(By.ID, "checkout-shipping-continue")
+        submit_button.click()
+
+         # Find the confirmation message
+        confirm_msg = driver.find_element(By.ID, "confirmation-message")
+
+        # Check if confirmation message is displayed
+        if confirm_msg.is_displayed() == True:
+            # Set the status of test as 'passed' if confirmation message is displayed
+            driver.execute_script(
+                'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"passed", "reason": "Your Order has been successfully placed."}}')
+        else:
+            # Set the status of test as 'failed' if confirmation message is not displayed
+            driver.execute_script(
+                'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"failed", "reason": "Oops! Please try again after some time"}}')
     except NoSuchElementException as err:
         message = "Exception: " + str(err.__class__) + str(err.msg)
         driver.execute_script(
