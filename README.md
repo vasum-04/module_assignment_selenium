@@ -1,5 +1,4 @@
-# python-selenium-browserstack
-
+# Module_Assignment_Selenium
 ## Prerequisite
 ```
 python3 and pip3 should be installed
